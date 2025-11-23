@@ -1,35 +1,122 @@
 openapi: 3.0.3
 info:
-  title: OnboardGenie – Generate Onboarding Plan API (Mock GET)
-  version: 1.0.1
+  title: OnboardGenie – Generate Onboarding Plan API
+  version: 2.0.0
   description: >
-    Mock API used by the OnboardGenie agent to fetch a sample onboarding
-    plan for a new employee from Mocki (static JSON).
+    OnboardGenie is an AI-powered onboarding engine that generates
+    expert-level 30-60-90 day onboarding plans for new hires and enriches
+    them with a welcome email, manager briefing, and learning path.
 
 servers:
-  - url: https://mocki.io
-    description: Mock server for OnboardGenie onboarding plan
+  - url: https://onboardgenie-api.onrender.com
+    description: OnboardGenie production API (Render)
 
 paths:
-  /v1/8b4522da-24ef-496e-88d4-20775e6ff8be:
-    get:
+  /onboarding/plan:
+    post:
       operationId: GenerateOnboardingPlan
-      summary: Get a sample onboarding plan (mock)
+      summary: Generate a 30-60-90 day onboarding plan for a new employee
       description: >
-        Returns a sample onboarding plan with phases, tasks, meetings and
-        resources. Used as a mock backend for the hackathon demo.
+        Generates a structured onboarding plan (preboarding, day 1, week 1,
+        month 1, month 2, month 3) for a new hire, and enriches it with
+        a personalized welcome email, a manager briefing, and a learning path.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingRequest"
       responses:
         "200":
-          description: Onboarding plan successfully returned
+          description: Onboarding plan successfully generated
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/OnboardingPlanResponse"
+        "400":
+          description: Invalid request payload
         "500":
           description: Internal server error
 
 components:
   schemas:
+    # ---------- INPUT ----------
+    OnboardingRequest:
+      type: object
+      required:
+        - employeeName
+        - role
+        - department
+        - startDate
+      properties:
+        employeeName:
+          type: string
+          description: Full name of the new hire
+          example: "Yamina Atmaoui"
+        role:
+          type: string
+          description: Job title / position
+          example: "AI Developer"
+        department:
+          type: string
+          description: Department or team name
+          example: "IA/ML"
+        startDate:
+          type: string
+          description: Start date of the employee (free text or ISO date)
+          example: "2025-12-12"
+        level:
+          type: string
+          description: Seniority level (junior, mid, senior)
+          example: "junior"
+        location:
+          type: string
+          description: Primary work location
+          example: "Paris, France"
+        workMode:
+          type: string
+          description: Work mode (remote, hybrid, onsite)
+          example: "hybrid"
+        managerName:
+          type: string
+          description: Direct manager name (optional)
+          example: "Lisa Dupont"
+        language:
+          type: string
+          description: Preferred language for communications
+          example: "english"
+        contractType:
+          type: string
+          description: Contract type (CDI, CDD, Internship, Contractor, etc.)
+          example: "CDI"
+        toolsNeeded:
+          type: array
+          description: List of key tools/software the employee needs
+          items:
+            type: string
+          example:
+            - "Laptop"
+            - "VPN access"
+            - "GitHub"
+            - "Jira"
+        onboardingGoals:
+          type: array
+          description: High-level onboarding goals for this hire
+          items:
+            type: string
+          example:
+            - "Be ready to ship code in the first month"
+            - "Understand the product architecture"
+        roleContext:
+          type: string
+          description: Free-text context about the role and mission
+          example: "Junior AI developer working on LLM-based internal tools."
+        customNotes:
+          type: string
+          description: Any custom notes from HR or the manager
+          example: "Needs extra support on cloud tooling during month 1."
+
+    # ---------- INTERNAL EMPLOYEE CONTEXT ----------
     EmployeeContext:
       type: object
       required:
@@ -46,59 +133,22 @@ components:
           example: "Yamina Atmaoui"
         role:
           type: string
-          example: "Junior AI Engineer"
+          example: "AI Developer"
         department:
           type: string
-          example: "AI & Data"
+          example: "IA/ML"
         location:
           type: string
-          example: "Paris"
+          example: "Paris, France"
         start_date:
           type: string
-          format: date
-          example: "2025-12-02"
+          example: "2025-12-12"
         seniority_level:
           type: string
           example: "junior"
         work_mode:
           type: string
           example: "hybrid"
-
-    OnboardingPlanResponse:
-      type: object
-      description: Full onboarding plan generated for the employee.
-      properties:
-        employee:
-          $ref: "#/components/schemas/EmployeeContext"
-        summary:
-          type: string
-          example: >
-            30-60-90 day onboarding plan focusing on culture, tooling,
-            and first contributions.
-        phases:
-          type: array
-          items:
-            type: string
-          example:
-            ["preboarding", "day1", "week1", "month1", "month2", "month3"]
-        tasks:
-          type: array
-          items:
-            $ref: "#/components/schemas/OnboardingTask"
-        suggested_meetings:
-          type: array
-          items:
-            type: string
-          example:
-            - "Day-1 welcome meeting with HR"
-            - "Week-1 1:1 to define 30-60-90 day goals"
-        learning_resources:
-          type: array
-          items:
-            type: string
-          example:
-            - "Company handbook & HR policies"
-            - "Security & compliance training"
 
     OnboardingTask:
       type: object
@@ -115,19 +165,79 @@ components:
           example: "pre-1"
         phase:
           type: string
+          description: Onboarding phase (preboarding, day1, week1, month1, etc.)
           example: "preboarding"
         title:
           type: string
           example: "Collect legal & HR documents"
         description:
           type: string
-          example: "HR sends contract and collects required documents."
+          example: "HR sends contract, confidentiality agreement, and collects required documents."
         owner:
           type: string
+          description: Who is responsible for this task (HR, IT, Manager, Employee)
           example: "HR"
         due_offset_days:
           type: integer
-          example: -3
+          description: >
+            Relative day offset from the start date (negative for preboarding).
+          example: -5
         channel:
           type: string
+          description: Preferred channel for this task (email, meeting, task, etc.)
           example: "email"
+
+    # ---------- OUTPUT ----------
+    OnboardingPlanResponse:
+      type: object
+      description: Full onboarding plan generated for the employee.
+      properties:
+        employee:
+          $ref: "#/components/schemas/EmployeeContext"
+        summary:
+          type: string
+          example: >
+            30-60-90 day onboarding plan focusing on culture, tooling,
+            and first contributions.
+        phases:
+          type: array
+          items:
+            type: string
+          example:
+            - "preboarding"
+            - "day1"
+            - "week1"
+            - "month1"
+            - "month2"
+            - "month3"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingTask"
+        suggested_meetings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Day-1 welcome meeting with HR"
+            - "Day-1 team introduction with manager"
+            - "Week-1 1:1 to define 30-60-90 day goals"
+            - "Month-3 review & growth conversation"
+        learning_resources:
+          type: array
+          items:
+            type: string
+          example:
+            - "Company handbook & HR policies"
+            - "Security & compliance training"
+            - "Technical onboarding for AI/ML"
+            - "Internal knowledge base / documentation"
+        welcome_email:
+          type: string
+          description: AI-generated welcome email for the new hire
+        manager_briefing:
+          type: string
+          description: 30-60-90 day focus points for the manager
+        learning_path:
+          type: string
+          description: Structured learning plan for the first 3 months
