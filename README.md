@@ -1,105 +1,97 @@
-# OnboardGenie – AI-Powered Onboarding Engine (IBM watsonx)
+# OnboardGenie – AI-Powered 30-60-90 Day Onboarding Assistant
 
-OnboardGenie is an enterprise-grade onboarding engine designed for HR and PeopleOps teams.  
-It generates structured **30-60-90 day onboarding plans** for new hires and enriches them using **IBM watsonx.ai (Granite)**.
+OnboardGenie is an AI-powered HR assistant that generates expert-level, structured 30-60-90 day onboarding plans for new hires.  
+It connects a Python backend (FastAPI) with an IBM watsonx Orchestrate agent to deliver a complete onboarding experience:
+- Preboarding → Day 1 → Week 1 → Month 1 → Month 2 → Month 3
+- Detailed tasks for HR, IT, manager, and the new employee
+- Personalized welcome email
+- Manager briefing (focus points for 30/60/90 days)
+- Learning path for the first three months
 
-This backend is exposed as a REST API and can be plugged into **IBM watsonx Orchestrate** as a **custom OpenAPI tool**.
+This project was built for an AI hackathon to demonstrate how LLMs + orchestration tools can streamline and standardize employee onboarding at scale.
 
 ---
 
-## ✨ What OnboardGenie Does
+## 🚀 Key Features
 
-- **Rule-based onboarding engine**
-
-  - Phases: `preboarding`, `day1`, `week1`, `month1`, `month2`, `month3`
-  - Clear ownership: **HR, IT, Manager, Employee**
-  - Structured output: tasks, meetings, learning resources
-
-- **LLM enrichment with IBM Granite**
-
-  - Personalized **welcome email** for the new hire
-  - Manager **30-60-90 briefing**
-  - **Learning path** for the first 3 months
-
-- **Orchestrate-ready**
-  - Single endpoint: `POST /onboarding/plan`
-  - Request model aligned with your OpenAPI schema (camelCase → Pydantic)
-  - Can be registered as a tool: `GenerateOnboardingPlan` in IBM watsonx Orchestrate
+- **AI-generated 30-60-90 day onboarding plan**
+  - Phases: preboarding, day 1, week 1, month 1, month 2, month 3
+  - Tasks with owner, due date offset, and channel (email, meeting, task, etc.)
+- **Personalized welcome email**
+  - Tailored to the employee’s name, role, department, and start date
+- **Manager briefing**
+  - Clear focus points for 30 / 60 / 90 days (integration, ownership, autonomy, growth)
+- **Learning path**
+  - Progressive learning steps over the first 3 months (tools, stack, AI/ML concepts, internal process)
+- **Production-ready backend**
+  - FastAPI service deployed on Render
+  - OpenAPI 3.0 specification used as a tool in IBM watsonx Orchestrate
+- **Enterprise-grade orchestration**
+  - IBM watsonx Orchestrate agent (“OnboardGenie”) that:
+    - Calls the backend tool when an onboarding plan is requested
+    - Summarizes, reformats, and explains plans for HR, managers, and employees
 
 ---
 
 ## 🧱 Architecture
 
+**High-level components:**
+
+1. **FastAPI Backend (OnboardGenie API)**
+   - Exposes one main endpoint: `POST /onboarding/plan`
+   - Takes a rich employee context (name, role, start date, level, location, etc.)
+   - Returns a structured `OnboardingPlanResponse` (employee, phases, tasks, meetings, resources, emails, learning path)
+   - Deployed on Render:  
+     `https://onboardgenie-api.onrender.com`
+
+2. **OpenAPI Specification (`onboardgenie.yaml`)**
+   - Describes the backend using OpenAPI 3.0.3
+   - Defines:
+     - `OnboardingRequest` schema (input)
+     - `OnboardingPlanResponse` schema (output)
+     - Endpoint `POST /onboarding/plan`
+   - Imported into IBM watsonx Orchestrate as a **tool** called `GenerateOnboardingPlan`.
+
+3. **IBM watsonx Orchestrate Agent (“OnboardGenie”)**
+   - Uses the LLM model `llama-3-2-90b-vision-instruct` (or similar)
+   - Has a system-level Behavior configuration:
+     - Always call the `GenerateOnboardingPlan` tool when an onboarding plan is requested
+     - Enrich results with clear explanations, summaries, and messages
+   - Exposed through the Orchestrate chat UI.
+
+---
+
+## 🛠 Tech Stack
+
+- **Backend**
+  - Python 3
+  - FastAPI
+  - Uvicorn
+  - Pydantic
+- **Deployment**
+  - Render (Free tier)
+- **AI / Orchestration**
+  - IBM watsonx Orchestrate
+  - LLM model (Llama-3 / watsonx)
+  - OpenAPI 3.0.3 tool integration
+
+---
+
+## 📡 API – OnboardGenie Backend
+
+### Base URL
+
 ```text
-backend/
-  app/
-    __init__.py
-    config.py        # env & IBM settings
-    models.py        # Pydantic models (request / response / internal types)
-    rules_engine.py  # rule-based onboarding plan generation
-    llm_engine.py    # IBM Granite integration (welcome email, briefing, learning path)
-    workflow.py      # internal orchestrator (rules + LLM)
-    main.py          # FastAPI app (health + /onboarding/plan)
-   openapi/
-     onboardgenie.yaml
-  .gitignores
-  requirements.txt
-  README.md
-```
+https://onboardgenie-api.onrender.com
+````
 
-- **FastAPI** exposes the HTTP API.
-- **rules_engine** guarantees a consistent base plan.
-- **llm_engine** calls **IBM Granite** via the `ibm-watsonx-ai` SDK.
-- **workflow** decides whether to enrich with LLM based on `USE_LLM`.
+### Endpoint
 
----
+#### `POST /onboarding/plan`
 
-## ⚙️ Configuration
+Generate a full 30-60-90 day onboarding plan for a new employee.
 
-Environment variables are loaded via `.env` (with `python-dotenv`).
-
-Create a `.env` file in `backend/`:
-
-```env
-USE_LLM=true
-
-IBM_API_KEY=your_ibm_api_key
-IBM_PROJECT_ID=your_project_id
-IBM_REGION=eu-de              # or us-south, etc.
-IBM_MODEL_ID=ibm/granite-3-8b-instruct
-```
-
----
-
-## 📦 Local Installation
-
-From the `backend/` folder:
-
-```bash
-# 1. Create and activate a virtual environment
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-# source .venv/bin/activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Run the API
-uvicorn app.main:app --reload --port 8080
-```
-
-The API will be available at:
-
-- Swagger UI: [http://localhost:8080/docs](http://localhost:8080/docs)
-- Health check: [http://localhost:8080/health](http://localhost:8080/health)
-
----
-
-## 🧪 Example Request
-
-`POST /onboarding/plan`
+**Request body (`application/json`):**
 
 ```json
 {
@@ -109,11 +101,26 @@ The API will be available at:
   "startDate": "2025-12-12",
   "level": "junior",
   "location": "France",
-  "workMode": "hybrid"
+  "workMode": "hybrid",
+  "managerName": "Lisa",
+  "language": "english",
+  "contractType": "CDI",
+  "toolsNeeded": [
+    "Laptop",
+    "VPN access",
+    "GitHub",
+    "Jira"
+  ],
+  "onboardingGoals": [
+    "Be ready to start coding within the first month",
+    "Understand the product architecture"
+  ],
+  "roleContext": "Junior AI developer working on LLM-based internal tools.",
+  "customNotes": "Needs extra support on cloud tooling during month 1."
 }
 ```
 
-Example response (simplified):
+**Response (simplified):**
 
 ```json
 {
@@ -128,67 +135,127 @@ Example response (simplified):
   },
   "summary": "30-60-90 day onboarding plan for Mina...",
   "phases": ["preboarding", "day1", "week1", "month1", "month2", "month3"],
-  "tasks": [ ... ],
-  "suggested_meetings": [ ... ],
-  "learning_resources": [ ... ],
-  "welcome_email": "Subject: Welcome to the IA/ML Team, Mina!...",
-  "manager_briefing": "- 30 days: ...",
-  "learning_path": "- Week 1: ..."
+  "tasks": [
+    {
+      "id": "pre-1",
+      "phase": "preboarding",
+      "title": "Collect legal & HR documents",
+      "description": "HR sends contract, confidentiality agreement and collects required documents.",
+      "owner": "HR",
+      "due_offset_days": -5,
+      "channel": "email"
+    }
+    // ...
+  ],
+  "suggested_meetings": [
+    "Day-1 welcome meeting with HR",
+    "Week-1 1:1 to define 30-60-90 day goals"
+  ],
+  "learning_resources": [
+    "Company handbook & HR policies",
+    "Security & compliance training"
+  ],
+  "welcome_email": "Subject: Welcome to the IA/ML Team, Mina! ...",
+  "manager_briefing": "Manager focus for Mina's first 90 days: ...",
+  "learning_path": "Week 1: ... Months 2-3: ..."
 }
 ```
 
 ---
 
-## 🧩 Integration with IBM watsonx Orchestrate
+## 🧪 Run the Backend Locally (Dev Mode)
 
-OnboardGenie is designed to be used as a **custom OpenAPI tool**:
+```bash
+# 1. Clone the repo
+git clone https://github.com/<your-username>/onboardgenie-backend.git
+cd onboardgenie-backend
 
-1. **Deploy** this backend to a public URL, e.g.:
+# 2. Create and activate a virtual environment (optional but recommended)
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
 
-   ```text
-   https://onboardgenie-api.onrender.com
-   ```
+# 3. Install dependencies
+pip install -r requirements.txt
 
-2. In your OpenAPI YAML for Orchestrate, set:
+# 4. Run the FastAPI server
+uvicorn main:app --reload
+```
 
-   ```yaml
-   openapi: 3.0.3
-   servers:
-     - url: https://onboardgenie-api.onrender.com
-       description: OnboardGenie production API
-   paths:
-     /onboarding/plan:
-       post:
-         operationId: GenerateOnboardingPlan
-         ...
-   ```
+The API will be available at:
 
-3. **Import** the OpenAPI spec into **IBM watsonx Orchestrate** as a tool:
-
-   - Tool name: `GenerateOnboardingPlan`
-   - Method: `POST /onboarding/plan`
-
-4. Use that tool inside your Orchestrate agent alongside:
-
-   - Email skills (send welcome email)
-   - Task/Project skills
-   - Calendar skills (for meetings)
+```text
+http://localhost:8000
+http://localhost:8000/docs   (Swagger UI)
+```
 
 ---
 
-## 📜 API Contract (OpenAPI)
+## 🤖 IBM watsonx Orchestrate Integration
 
-The full OpenAPI contract used by IBM watsonx Orchestrate
-is available in the repository:
+1. **Create a new agent** in Orchestrate named `OnboardGenie`.
 
-/openapi/onboardgenie.yaml
+2. In **Toolset**, add a new tool from an **OpenAPI document** and import `onboardgenie.yaml`.
 
-This file declares:
+3. Confirm that the tool `GenerateOnboardingPlan` is created and mapped to:
 
-- request/response model
-- the `POST /onboarding/plan` operation
-- schema definitions
-- server URL (updated after deployment)
+   * `POST /onboarding/plan`
+   * Request body: `OnboardingRequest`
+   * Response: `OnboardingPlanResponse`
 
-This YAML file is the contract imported inside Orchestrate
-as the custom tool **GenerateOnboardingPlan**.
+4. In the **Behavior → Instructions** section, set the system rules, for example:
+
+   ```text
+   - If the user asks for an onboarding plan → ALWAYS call the tool GenerateOnboardingPlan.
+   - If the user asks for summaries or explanations → provide them directly.
+   - When interacting with HR or managers → be formal and actionable.
+   - When interacting with employees → be supportive, clear, and friendly.
+   ```
+
+5. Click **Deploy** so the agent becomes available in the Orchestrate chat.
+
+---
+
+## 🎬 Demo Scenario for the Jury
+
+1. Open the **Orchestrate Chat** with the `OnboardGenie` agent.
+
+2. Type:
+
+   > “Generate a complete onboarding plan for a new AI developer named Mina, joining the IA/ML team in France next month, working in hybrid mode, junior level.”
+
+3. Show the agent:
+
+   * Calling the `GenerateOnboardingPlan` tool.
+   * Returning a structured onboarding plan + tasks + meetings.
+   * Displaying a personalized welcome email, manager briefing, and learning path.
+
+4. Optionally, ask follow-up questions:
+
+   * “Summarize this onboarding as 5 key bullet points for the CEO.”
+   * “Rewrite the welcome email in French.”
+   * “Adapt the plan for a remote senior engineer.”
+
+This demonstrates orchestration, tool usage, and LLM reasoning in a real HR use case.
+
+---
+
+## 🔮 Future Improvements
+
+* Add company-specific knowledge bases (HR policies, security training, internal wiki) as Knowledge sources.
+* Generate calendar events and tasks directly in Outlook or Slack.
+* Add a voice channel (phone / audio) using the Voice modality.
+* Support multiple languages out of the box (English, French, etc.).
+* Analytics dashboard to track onboarding progress and task completion.
+
+---
+
+## 👩‍💻 Author
+
+* **Name:** Yamina Atmaoui
+* **Role:** AI & Full-Stack Developer
+* **Hackathon:** IBM / watsonx – AI Automation & Orchestration
+
+```
