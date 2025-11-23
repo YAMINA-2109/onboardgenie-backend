@@ -54,7 +54,7 @@ IBM watsonx Orchestrate agent:
 * Inputs → Employee context
 * Output → A full `OnboardingPlanResponse`
 * Hosted on Render:
-  👉 **[https://onboardgenie-api.onrender.com]([https://onboardgenie-api.onrender.com](https://onboardgenie-api.onrender.com/docs))**
+  👉 **[https://onboardgenie-api.onrender.com](https://onboardgenie-api.onrender.com/docs)**
 
 ### **2. OpenAPI Specification (`onboardgenie.yaml`)**
 
