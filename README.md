@@ -257,5 +257,3 @@ This demonstrates orchestration, tool usage, and LLM reasoning in a real HR use 
 * **Name:** Yamina Atmaoui
 * **Role:** AI & Full-Stack Developer
 * **Hackathon:** IBM / watsonx – AI Automation & Orchestration
-
-```
