@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: OnboardGenie – Generate Onboarding Plan API (Mock GET)
+  version: 1.0.1
+  description: >
+    Mock API used by the OnboardGenie agent to fetch a sample onboarding
+    plan for a new employee from Mocki (static JSON).
+
+servers:
+  - url: https://mocki.io
+    description: Mock server for OnboardGenie onboarding plan
+
+paths:
+  /v1/8b4522da-24ef-496e-88d4-20775e6ff8be:
+    get:
+      operationId: GenerateOnboardingPlan
+      summary: Get a sample onboarding plan (mock)
+      description: >
+        Returns a sample onboarding plan with phases, tasks, meetings and
+        resources. Used as a mock backend for the hackathon demo.
+      responses:
+        "200":
+          description: Onboarding plan successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingPlanResponse"
+        "500":
+          description: Internal server error
+
+components:
+  schemas:
+    EmployeeContext:
+      type: object
+      required:
+        - employee_name
+        - role
+        - department
+        - location
+        - start_date
+        - seniority_level
+        - work_mode
+      properties:
+        employee_name:
+          type: string
+          example: "Yamina Atmaoui"
+        role:
+          type: string
+          example: "Junior AI Engineer"
+        department:
+          type: string
+          example: "AI & Data"
+        location:
+          type: string
+          example: "Paris"
+        start_date:
+          type: string
+          format: date
+          example: "2025-12-02"
+        seniority_level:
+          type: string
+          example: "junior"
+        work_mode:
+          type: string
+          example: "hybrid"
+
+    OnboardingPlanResponse:
+      type: object
+      description: Full onboarding plan generated for the employee.
+      properties:
+        employee:
+          $ref: "#/components/schemas/EmployeeContext"
+        summary:
+          type: string
+          example: >
+            30-60-90 day onboarding plan focusing on culture, tooling,
+            and first contributions.
+        phases:
+          type: array
+          items:
+            type: string
+          example:
+            ["preboarding", "day1", "week1", "month1", "month2", "month3"]
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingTask"
+        suggested_meetings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Day-1 welcome meeting with HR"
+            - "Week-1 1:1 to define 30-60-90 day goals"
+        learning_resources:
+          type: array
+          items:
+            type: string
+          example:
+            - "Company handbook & HR policies"
+            - "Security & compliance training"
+
+    OnboardingTask:
+      type: object
+      required:
+        - id
+        - phase
+        - title
+        - description
+        - owner
+        - due_offset_days
+      properties:
+        id:
+          type: string
+          example: "pre-1"
+        phase:
+          type: string
+          example: "preboarding"
+        title:
+          type: string
+          example: "Collect legal & HR documents"
+        description:
+          type: string
+          example: "HR sends contract and collects required documents."
+        owner:
+          type: string
+          example: "HR"
+        due_offset_days:
+          type: integer
+          example: -3
+        channel:
+          type: string
+          example: "email"
