@@ -12,6 +12,10 @@ It combines a **Python FastAPI backend** with an **IBM watsonx Orchestrate agent
 Built for the IBM AI Hackathon, this project showcases how **LLMs + orchestration** can automate and standardize onboarding at enterprise scale.
 
 ---
+## 🎥 **OnboardGenie – Demo Video** :
+[![Watch the video](./onboarding_sub_img.png)](./video1327262728.mp4)
+
+---
 
 ## 🚀 Key Features
 
