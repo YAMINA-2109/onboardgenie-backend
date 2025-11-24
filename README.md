@@ -13,7 +13,7 @@ Built for the IBM AI Hackathon, this project showcases how **LLMs + orchestratio
 
 ---
 ## 🎥 **OnboardGenie – Demo Video** :
-[![Watch the video](./onboarding_sub_img.png)](./video1327262728.mp4)
+[![Watch the video](./onboarding_sub_img.png)](video1327262728.mp4)
 
 ---
 
